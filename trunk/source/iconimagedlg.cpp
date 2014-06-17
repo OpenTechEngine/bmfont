@@ -25,6 +25,7 @@
    andreas@angelcode.com
 */
 
+#include <Windows.h>
 #include "iconimagedlg.h"
 #include "resource.h"
 #include "acwin_filedialog.h"
@@ -42,7 +43,7 @@ CIconImageDlg::CIconImageDlg() : CDialog()
 
 int CIconImageDlg::DoModal(CWindow *parent)
 {
-	return CDialog::DoModal(MAKEINTRESOURCE(IDD_ICONIMAGE), parent);
+	return CDialog::DoModal(IDD_ICONIMAGE, parent);
 }
 
 LRESULT CIconImageDlg::MsgProc(UINT msg, WPARAM wParam, LPARAM lParam)
@@ -83,13 +84,17 @@ void CIconImageDlg::OnBrowse()
 
 	if( dlg.AskForOpenFileName(this) )
 	{
-		SetDlgItemText(hWnd, IDC_FILE, dlg.GetFileName().c_str());
+		TCHAR buf[512];
+		ConvertUtf8ToTChar(dlg.GetFileName(), buf, 512);
+		SetDlgItemText(hWnd, IDC_FILE, buf);
 	}
 }
 
 void CIconImageDlg::OnInit()
 {
-	SetDlgItemText(hWnd, IDC_FILE, fileName.c_str());
+	TCHAR buf[512];
+	ConvertUtf8ToTChar(fileName, buf, 512);
+	SetDlgItemText(hWnd, IDC_FILE, buf);
 	SetDlgItemInt(hWnd, IDC_ID, id, FALSE);
 
 	SetDlgItemInt(hWnd, IDC_XOFFSET, xoffset, TRUE);
@@ -105,10 +110,10 @@ void CIconImageDlg::OnInit()
 
 void CIconImageDlg::GetOptions()
 {
-	char buf[260];
+	TCHAR buf[260];
 
 	GetDlgItemText(hWnd, IDC_FILE, buf, 260);
-	fileName = buf;
+	ConvertTCharToUtf8(buf, fileName);
 
 	id = GetDlgItemInt(hWnd, IDC_ID, 0, FALSE);
 	xoffset = GetDlgItemInt(hWnd, IDC_XOFFSET, 0, TRUE);

@@ -25,6 +25,7 @@
    andreas@angelcode.com
 */
 
+#include <Windows.h>
 #include <assert.h>
 #include <sstream>
 
@@ -67,7 +68,7 @@ int CImageMgr::Create(CCharWin *parent, CFontGen *gen)
 	DeleteMenu(hMenu, SC_MAXIMIZE, MF_BYCOMMAND);
 	DeleteMenu(hMenu, SC_RESTORE,  MF_BYCOMMAND);
 
-	SetMenu(MAKEINTRESOURCE(IDR_IMG_MGR_MENU));
+	SetMenu(IDR_IMG_MGR_MENU);
 
 	RECT rc;
 	GetClientRect(hWnd, &rc);
@@ -160,10 +161,12 @@ void CImageMgr::RefreshList()
 
 			stringstream id_stream;
 			id_stream << id;
-			string id_string = id_stream.str();
 
-			listView->InsertItem(n, (char*)id_string.c_str(), id);
-			ListView_SetItemText(listView->GetHandle(), n, 1, (char*)filename.c_str());
+			listView->InsertItem(n, id_stream.str(), id);
+
+			TCHAR buf[512];
+			ConvertUtf8ToTChar(filename, buf, 512);
+			ListView_SetItemText(listView->GetHandle(), n, 1, buf);
 		}
 	}
 
@@ -198,7 +201,7 @@ void CImageMgr::OnImportImage()
 										  iconDlg.advance);
 			if( r < 0 )
 			{
-				MessageBox(hWnd, "Failed to load image file", "File error", MB_OK);
+				MessageBox(hWnd, __TEXT("Failed to load image file"), __TEXT("File error"), MB_OK);
 				return;
 			}
 
@@ -235,7 +238,7 @@ void CImageMgr::OnEditImage()
 	int item = -1;
 	if( (item = listView->GetNextItem(item, LVNI_FOCUSED)) != -1 )
 	{
-		char buf[256];
+		TCHAR buf[256];
 		ListView_GetItemText(listView->GetHandle(), item, 1, buf, 256);
 
 		int oldId;

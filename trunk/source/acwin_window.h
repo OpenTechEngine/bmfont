@@ -1,6 +1,6 @@
 /*
    AngelCode Tool Box Library
-   Copyright (c) 2004-2011 Andreas Jönsson
+   Copyright (c) 2004-2014 Andreas Jonsson
   
    This software is provided 'as-is', without any express or implied 
    warranty. In no event will the authors be held liable for any 
@@ -21,28 +21,29 @@
    3. This notice may not be removed or altered from any source 
       distribution.
   
-   Andreas Jönsson
+   Andreas Jonsson
    andreas@angelcode.com
 */
 
 
-// 2011-07-30 Undefined some macros from windows.h
+// 2014-06-16  SetMenu and SetAccelerator takes an integer representing the resource
+// 2014-06-16  Removed #include <windows.h> in this header to, instead it needs to be included where Windows API is used
+// 2014-06-16  Added ConvertTCharToUtf8 and ConvertUtf8ToTChar
+// 2011-07-30  Undefined some macros from windows.h
+
 
 // To compile with this class you must link with:
 // user32.lib gdi32.lib
 
+
 #ifndef ACWIN_WINDOW_H
 #define ACWIN_WINDOW_H
 
-#include <windows.h>
-
-#ifdef LoadImage
-#undef LoadImage
+#ifndef _INC_WINDOWS
+#error Must include <windows.h> in .cpp file before <acwin_windows.h>
 #endif
 
-#ifdef DrawText
-#undef DrawText
-#endif
+#include <string>
 
 namespace acWindow
 {
@@ -66,9 +67,9 @@ public:
 	virtual ~CWindow();
 
 	int  Create(const char *title, int width, int height, DWORD style, DWORD styleEx, CWindow *parent, const char *className); 
-	int  SetAccelerator(const char *acceleratorName);
+	int  SetAccelerator(int acceleratorId);
 	int  SetAccelerator(ACCEL *accels, int numItems);
-	int  SetMenu(const char *menuresource);
+	int  SetMenu(int menuresourceId);
 
 	void Invalidate(BOOL erase);
 
@@ -108,6 +109,11 @@ private:
 	static LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 	static LRESULT CALLBACK CreateProc(int, WPARAM, LPARAM);
 };
+
+// Helpers for converting strings between UTF8 and Windows' TCHAR
+// These are prepared for both when the application is built for multibyte and when built for unicode
+void ConvertTCharToUtf8(const TCHAR *buf, std::string &utf8);
+void ConvertUtf8ToTChar(const std::string &utf8, TCHAR *buf, size_t bufSize);
 
 }
 

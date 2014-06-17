@@ -1,6 +1,6 @@
 /*
    AngelCode Tool Box Library
-   Copyright (c) 2004-2007 Andreas Jönsson
+   Copyright (c) 2004-2014 Andreas Jonsson
   
    This software is provided 'as-is', without any express or implied 
    warranty. In no event will the authors be held liable for any 
@@ -21,10 +21,12 @@
    3. This notice may not be removed or altered from any source 
       distribution.
   
-   Andreas Jönsson
+   Andreas Jonsson
    andreas@angelcode.com
 */
 
+
+// 2014-06-16  DoModal now takes an integer representing the dialog resource
 
 #ifndef ACWIN_DIALOG_H
 #define ACWIN_DIALOG_H
@@ -41,7 +43,7 @@ public:
 	CDialog();
 
 	int Create(const char *templateName, CWindow *parent);
-	int DoModal(const char *templateName, CWindow *parent);
+	int DoModal(int templateId, CWindow *parent);
 
 	int Subclass(HWND hWnd);
 

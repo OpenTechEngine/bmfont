@@ -1,6 +1,6 @@
 /*
    AngelCode Tool Box Library
-   Copyright (c) 2004-2011 Andreas Jonsson
+   Copyright (c) 2004-2014 Andreas Jonsson
   
    This software is provided 'as-is', without any express or implied 
    warranty. In no event will the authors be held liable for any 
@@ -25,6 +25,7 @@
    andreas@angelcode.com
 */
 
+// 2014-06-15 Converting string arguments to std::string&
 // 2011-08-23 Added column parameter to Get/SetItemText
 // 2011-08-23 Added BeginLabelEdit, EndLabelEdit, and GetEditColumn
 
@@ -45,12 +46,12 @@ public:
 
 	int Create(DWORD style, DWORD exStyle, RECT *rc, CWindow *parent, UINT id);
 
-	int InsertColumn(UINT col, const char *name, UINT width);
+	int InsertColumn(UINT col, const std::string &name, UINT width);
 	int InsertItem(UINT item);
-	int InsertItem(UINT item, const char *text, long param = 0);
+	int InsertItem(UINT item, const std::string &text, long param = 0);
 	int DeleteItem(UINT item);
 
-	int FindItem(int start, const char *text);
+	int FindItem(int start, const std::string &text);
 	int FindItemByParam(int start, LPARAM param);
 	void EnsureVisible(UINT item);
 
@@ -58,7 +59,7 @@ public:
 	int GetItemParam(UINT item, LPARAM *param);
 	int GetItemText(UINT item, UINT column, std::string *text);
 	int GetItemImage(UINT item);
-	void SetItemText(UINT item, UINT column, const char *text);
+	void SetItemText(UINT item, UINT column, const std::string &text);
 	void SetItemState(int item, UINT mask, UINT state);
 	void SetItemImage(UINT item, int image);
 

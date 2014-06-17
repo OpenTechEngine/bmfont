@@ -25,6 +25,7 @@
    andreas@angelcode.com
 */
 
+#include <Windows.h>
 #include <string>
 #include "about.h"
 #include "resource.h"
@@ -38,7 +39,7 @@ CAbout::CAbout() : CDialog()
 
 int CAbout::DoModal(CWindow *parent)
 {
-	return CDialog::DoModal(MAKEINTRESOURCE(IDD_ABOUT), parent);
+	return CDialog::DoModal(IDD_ABOUT, parent);
 }
 
 LRESULT CAbout::MsgProc(UINT msg, WPARAM wParam, LPARAM lParam)

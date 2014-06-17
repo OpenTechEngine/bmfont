@@ -42,8 +42,10 @@
 #include "acimg.h"
 #include "acutil_unicode.h"
 #include "acutil_path.h"
+#include "acwin_window.h"
 
 using namespace std;
+using namespace acWindow;
 
 #define CLR_BORDER 0x007F00ul
 #define CLR_UNUSED 0xFF0000ul
@@ -466,7 +468,10 @@ HFONT CFontGen::CreateFont(int FontSize)
 	if( useSmoothing && useClearType )
 		quality = CLEARTYPE_QUALITY;
 
-	HFONT font = ::CreateFontA(FontSize, 0, 0, 0, isBold ? FW_BOLD : FW_NORMAL, isItalic ? TRUE : FALSE, 0, 0, charSet, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, quality, DEFAULT_PITCH, fontName.c_str());
+	// Convert the font name from utf8 to utf16 so we can support fontnames with non-ascii characters
+	TCHAR buf[1024];
+	ConvertUtf8ToTChar(fontName, buf, 1024);
+	HFONT font = ::CreateFont(FontSize, 0, 0, 0, isBold ? FW_BOLD : FW_NORMAL, isItalic ? TRUE : FALSE, 0, 0, charSet, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, quality, DEFAULT_PITCH, buf);
 
 	return font;
 }
@@ -848,10 +853,16 @@ int CFontGen::SetFontFile(const string &file)
 	{
 		// Remove the old font
 		if( fontFile != "" )
-			RemoveFontResourceEx(fontFile.c_str(), FR_PRIVATE, 0);
+		{
+			TCHAR buf[1024];
+			ConvertUtf8ToTChar(fontFile, buf, 1024);
+			RemoveFontResourceEx(buf, FR_PRIVATE, 0);
+		}
 
 		// Add the new font so it can be used to draw text with 
-		AddFontResourceEx(file.c_str(), FR_PRIVATE, 0);
+		TCHAR buf[1024];
+		ConvertUtf8ToTChar(file, buf, 1024);
+		AddFontResourceEx(buf, FR_PRIVATE, 0);
 	}
 
 	fontFile = file;

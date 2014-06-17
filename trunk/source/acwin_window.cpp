@@ -1,6 +1,6 @@
 /*
    AngelCode Tool Box Library
-   Copyright (c) 2004-2007 Andreas Jönsson
+   Copyright (c) 2004-2014 Andreas Jonsson
   
    This software is provided 'as-is', without any express or implied 
    warranty. In no event will the authors be held liable for any 
@@ -21,15 +21,21 @@
    3. This notice may not be removed or altered from any source 
       distribution.
   
-   Andreas Jönsson
+   Andreas Jonsson
    andreas@angelcode.com
 */
 
 
+// 2014-06-16  Prepared the code to work for both unicode and multibyte applications
+// 2014-06-16  Added ConvertTCharToUtf8 and ConvertUtf8ToTChar
+
+#include <Windows.h>
 #include "acwin_window.h"
 #include <winuser.h>
 #include <assert.h>
 #include <map>
+
+using namespace std;
 
 namespace acWindow
 {
@@ -107,12 +113,16 @@ int CWindow::Create(const char *title, int width, int height, DWORD style, DWORD
 
 	HINSTANCE hInst = GetModuleHandle(0);
 
-    // Create the window
+	// Create the window
 	// We set up a hook procedure to connect our class instance with the window handle
+	TCHAR classNameBuf[128], titleBuf[256];
+	ConvertUtf8ToTChar(title, titleBuf, 256);
+	ConvertUtf8ToTChar(className, classNameBuf, 128);
+
 	HookCreate(this);
-    HWND hWndNew = CreateWindowEx( styleEx, className, 
-		                           title, style, CW_USEDEFAULT, CW_USEDEFAULT,
-						           width,height,hParent,NULL,hInst,0 ); 
+	HWND hWndNew = CreateWindowEx( styleEx, classNameBuf, 
+		                           titleBuf, style, CW_USEDEFAULT, CW_USEDEFAULT,
+		                           width, height, hParent, NULL, hInst, 0 ); 
 	if( hWndNew == NULL )
 		return EWND_CREATE_WINDOW_FAILED;
 	
@@ -123,7 +133,7 @@ int CWindow::Create(const char *title, int width, int height, DWORD style, DWORD
 
 //=============================================================================
 
-int CWindow::SetAccelerator(const char *accel)
+int CWindow::SetAccelerator(int accel)
 {
 	// Get the module handle
 	HINSTANCE hInst = GetModuleHandle(0);
@@ -131,7 +141,7 @@ int CWindow::SetAccelerator(const char *accel)
 	// Load the accelerator table
 	if( accel != 0 )
 	{
-		hAccel = LoadAccelerators(hInst, accel);
+		hAccel = LoadAccelerators(hInst, MAKEINTRESOURCE(accel));
 		if( hAccel == 0 )
 			return EWND_LOAD_RESOURCE_FAILED;
 	}
@@ -164,7 +174,7 @@ int CWindow::SetAccelerator(ACCEL *accels, int numItems)
 
 //=============================================================================
 
-int CWindow::SetMenu(const char *menu)
+int CWindow::SetMenu(int menu)
 {
 	// Get the module handle
 	HINSTANCE hInst = GetModuleHandle(0);
@@ -180,7 +190,7 @@ int CWindow::SetMenu(const char *menu)
 	// Load the menu
 	if( menu != 0 )
 	{
-		hMenu = LoadMenu(hInst, menu);
+		hMenu = LoadMenu(hInst, MAKEINTRESOURCE(menu));
 		if( hMenu == 0 )
 			return EWND_LOAD_RESOURCE_FAILED;
 
@@ -200,8 +210,10 @@ int CWindow::RegisterClass(const char *className, UINT style, HBRUSH newBgBrush,
 	HINSTANCE hInst = GetModuleHandle(0);
 
 	// See if the class has been registered before
+	TCHAR buf[256];
+	ConvertUtf8ToTChar(className, buf, 256);
 	WNDCLASSEX wndClass;
-	if( GetClassInfoEx(hInst, className, &wndClass) )
+	if( GetClassInfoEx(hInst, buf, &wndClass) )
 		return 0;
 
 	// Register the new class
@@ -226,7 +238,7 @@ int CWindow::RegisterClass(const char *className, UINT style, HBRUSH newBgBrush,
 	wndClass.hCursor       = hCursor;
 	wndClass.hbrBackground = hBgBrush;
 	wndClass.lpszMenuName  = 0;
-	wndClass.lpszClassName = className;
+	wndClass.lpszClassName = buf;
 	wndClass.hIconSm       = hIconSmall;
 
 	ATOM windowClass = RegisterClassEx( &wndClass );
@@ -463,11 +475,17 @@ bool CWindow::IsVisible()
 void CWindow::UpdateWindowText(const char *text)
 {
 	int len = GetWindowTextLength(hWnd);
-	char *str = new char[len+1];
+	TCHAR *str = new TCHAR[len+1];
 	
 	GetWindowText(hWnd, str, len);
-	if( strcmp(text, str) != 0 )
-		SetWindowText(hWnd, text);
+	string oldText;
+	ConvertTCharToUtf8(str, oldText);
+	if( oldText != text )
+	{
+		TCHAR newText[1024];
+		ConvertUtf8ToTChar(text, newText, 1024);
+		SetWindowText(hWnd, newText);
+	}
 
 	delete[] str;
 }
@@ -486,7 +504,29 @@ void CWindow::HideSystemMenuButton()
 	SetClassLong(hWnd, GCL_HICONSM, NULL);
 
 	// Update the style cache so that the window can be redrawn correctly
-	SetWindowPos(hWnd, 0, 0, 0, 0, 0,  SWP_FRAMECHANGED|SWP_NOSIZE|SWP_NOMOVE);	
+	SetWindowPos(hWnd, 0, 0, 0, 0, 0,  SWP_FRAMECHANGED|SWP_NOSIZE|SWP_NOMOVE);
+}
+
+// Helpers for converting strings between UTF8 and Windows' TCHAR
+// These are prepared for both when the application is built for multibyte and when built for unicode
+void ConvertTCharToUtf8(const TCHAR *buf, std::string &utf8)
+{
+#ifdef _UNICODE
+	char bufUTF8[1024];
+	WideCharToMultiByte(CP_UTF8, 0, buf, -1, bufUTF8, 1024, NULL, NULL);
+	utf8 = bufUTF8;
+#else
+	utf8 = buf;
+#endif
+}
+
+void ConvertUtf8ToTChar(const std::string &utf8, TCHAR *buf, size_t bufSize)
+{
+#ifdef _UNICODE
+	MultiByteToWideChar(CP_UTF8, 0, utf8.c_str(), -1, buf, bufSize);
+#else
+	strcpy_s(buf, bufSize, utf8.c_str());
+#endif
 }
 
 }

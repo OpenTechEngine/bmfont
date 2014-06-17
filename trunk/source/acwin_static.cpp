@@ -1,6 +1,6 @@
 /*
    AngelCode Tool Box Library
-   Copyright (c) 2004-2012 Andreas Jonsson
+   Copyright (c) 2004-2014 Andreas Jonsson
   
    This software is provided 'as-is', without any express or implied 
    warranty. In no event will the authors be held liable for any 
@@ -25,7 +25,9 @@
    andreas@angelcode.com
 */
 
+// 2014-06-16  Prepared the code to work for both unicode and multibyte applications
 
+#include <Windows.h>
 #include "acwin_static.h"
 
 namespace acWindow
@@ -51,7 +53,7 @@ LRESULT CStatic::MsgProc(UINT msg, WPARAM wParam, LPARAM lParam)
 	case WM_PAINT:
 		if( isUrl )
 		{
-			OnPaint();		
+			OnPaint();
 			return 0;
 		}
 		break;
@@ -68,12 +70,15 @@ void CStatic::MakeUrl(const char *url)
 
 void CStatic::GoUrl()
 {
-	ShellExecute(NULL, "open", url.c_str(), NULL, NULL, SW_SHOWNORMAL);
+	TCHAR urlBuf[1024];
+	ConvertUtf8ToTChar(url, urlBuf, 1024);
+
+	ShellExecute(NULL, __TEXT("open"), urlBuf, NULL, NULL, SW_SHOWNORMAL);
 }
 
 void CStatic::OnPaint()
 {
-	char text[256];
+	TCHAR text[256];
 
 	PAINTSTRUCT ps;
 	HDC dc = BeginPaint(hWnd, &ps);
@@ -82,15 +87,14 @@ void CStatic::OnPaint()
 	HFONT oldFont = (HFONT)SelectObject(dc, font);
 
 	GetWindowText(hWnd, text, 256);
-	size_t len = strlen(text);
 	RECT rc;
 	GetClientRect(hWnd, &rc);
 
 	SetBkMode(dc, TRANSPARENT);
 	SetTextColor(dc, RGB(0,0,255));
 	
-	DrawTextA(dc, text, (int)len, &rc, 0);
-	DrawTextA(dc, text, (int)len, &rc, DT_CALCRECT);
+	DrawText(dc, text, -1, &rc, 0);
+	DrawText(dc, text, -1, &rc, DT_CALCRECT);
 
 	HPEN pen = CreatePen(PS_SOLID, 1, RGB(0,0,255));
 	HPEN oldPen = (HPEN)SelectObject(dc, pen);

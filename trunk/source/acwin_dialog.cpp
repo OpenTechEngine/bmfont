@@ -1,6 +1,6 @@
 /*
    AngelCode Tool Box Library
-   Copyright (c) 2004-2007 Andreas Jönsson
+   Copyright (c) 2004-2014 Andreas Jonsson
   
    This software is provided 'as-is', without any express or implied 
    warranty. In no event will the authors be held liable for any 
@@ -21,12 +21,20 @@
    3. This notice may not be removed or altered from any source 
       distribution.
   
-   Andreas Jönsson
+   Andreas Jonsson
    andreas@angelcode.com
 */
 
 
+// 2014-06-16  DoModal now takes an integer representing the dialog resource
+// 2014-06-16  Prepared the code to work for both unicode and multibyte applications
+
+
+#include <Windows.h>
 #include "acwin_dialog.h"
+#include <assert.h>
+
+using namespace std;
 
 namespace acWindow
 {
@@ -42,15 +50,18 @@ int CDialog::Create(const char *templateName, CWindow *parent)
 	HWND hParent = 0;
 	if( parent ) hParent = parent->GetHandle();
 
+	TCHAR buf[256];
+	ConvertUtf8ToTChar(templateName, buf, 256);
+
 	CWindow::HookCreate(this);
-	HWND hWndNew = CreateDialog(hInst, templateName, hParent, (DLGPROC)DlgProc);
+	HWND hWndNew = CreateDialog(hInst, buf, hParent, (DLGPROC)DlgProc);
 	if( hWndNew == 0 )
 		return EDLG_CREATE_DIALOG_FAILED;
 
 	return 0;
 }
 
-int CDialog::DoModal(const char *templateName, CWindow *parent)
+int CDialog::DoModal(int templateId, CWindow *parent)
 {
 	HINSTANCE hInst = GetModuleHandle(0);
 
@@ -58,7 +69,7 @@ int CDialog::DoModal(const char *templateName, CWindow *parent)
 	if( parent ) hParent = parent->GetHandle();
 
 	CWindow::HookCreate(this);
-	INT_PTR r = DialogBox(hInst, templateName, hParent, (DLGPROC)DlgProc);
+	INT_PTR r = DialogBox(hInst, MAKEINTRESOURCE(templateId), hParent, (DLGPROC)DlgProc);
 
 	return int(r);
 }
@@ -113,11 +124,21 @@ int CDialog::Subclass(HWND newHWnd)
 void CDialog::UpdateDlgItemText(UINT itemId, const char *text)
 {
 	int len = GetWindowTextLength(GetDlgItem(hWnd, itemId));
-	char *str = new char[len+1];
+	TCHAR *str = new TCHAR[len+1];
 	
 	GetDlgItemText(hWnd, itemId, str, len);
-	if( strcmp(text, str) != 0 )
-		SetDlgItemText(hWnd, itemId, text);
+
+	string oldText;
+	ConvertTCharToUtf8(str, oldText);
+	if( oldText != text )
+	{
+		assert( strlen(text) < 1024 );
+
+		TCHAR newBuf[1024];
+		ConvertUtf8ToTChar(text, newBuf, 1024);
+
+		SetDlgItemText(hWnd, itemId, newBuf);
+	}
 
 	delete[] str;
 }

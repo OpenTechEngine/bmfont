@@ -1,6 +1,6 @@
 /*
    AngelCode Tool Box Library
-   Copyright (c) 2004-2012 Andreas Jonsson
+   Copyright (c) 2004-2014 Andreas Jonsson
   
    This software is provided 'as-is', without any express or implied 
    warranty. In no event will the authors be held liable for any 
@@ -25,9 +25,11 @@
    andreas@angelcode.com
 */
 
-// 2012-08-12 Added SetInitialDir
-// 2009-03-22 Fixed crash when passing null pointer to AskForOpenFileName and AskForSaveFileName
+// 2014-06-16  Prepared the code to work for both unicode and multibyte applications
+// 2012-08-12  Added SetInitialDir
+// 2009-03-22  Fixed crash when passing null pointer to AskForOpenFileName and AskForSaveFileName
 
+#include <Windows.h>
 #include "acwin_filedialog.h"
 
 using namespace std;
@@ -62,23 +64,31 @@ void CFileDialog::SetDefaultFilter(int index)
 
 string CFileDialog::GetFileName()
 {
-	return string(szFile);
+	string name;
+	ConvertTCharToUtf8(szFile, name);
+	return name;
 }
 
 int CFileDialog::AskForOpenFileName(CWindow *owner)
 {
 	OPENFILENAME ofn;
 
+	TCHAR fileFilterBuf[512] = {0}; // Make sure the string is terminated with a double null
+	ConvertUtf8ToTChar(fileFilter, fileFilterBuf, 512);
+
+	TCHAR initialDirBuf[512] = {0};
+	ConvertUtf8ToTChar(initialDir, initialDirBuf, 512);
+
 	ZeroMemory(&ofn, sizeof(OPENFILENAME));
 	ofn.lStructSize     = sizeof(OPENFILENAME);
 	ofn.hwndOwner       = owner ? owner->GetHandle() : 0;
 	ofn.lpstrFile       = szFile;
 	ofn.nMaxFile        = sizeof(szFile);
-	ofn.lpstrFilter     = fileFilter.c_str();
+	ofn.lpstrFilter     = fileFilterBuf;
 	ofn.nFilterIndex    = filterIndex;
 	ofn.lpstrFileTitle  = NULL;
 	ofn.nMaxFileTitle   = 0;
-	ofn.lpstrInitialDir = initialDir.length() ? initialDir.c_str() : 0;
+	ofn.lpstrInitialDir = initialDir.length() ? initialDirBuf : 0;
 	ofn.Flags = OFN_FILEMUSTEXIST | OFN_NONETWORKBUTTON;
 	// TODO: ofn.FlagsEx = OFN_EX_NOPLACESBAR;
 
@@ -93,16 +103,22 @@ int CFileDialog::AskForSaveFileName(CWindow *owner)
 {
 	OPENFILENAME ofn;
 
+	TCHAR fileFilterBuf[512] = {0}; // Make sure the string is terminated with a double null
+	ConvertUtf8ToTChar(fileFilter, fileFilterBuf, 512);
+
+	TCHAR initialDirBuf[512] = {0};
+	ConvertUtf8ToTChar(initialDir, initialDirBuf, 512);
+
 	ZeroMemory(&ofn, sizeof(OPENFILENAME));
-	ofn.lStructSize		= sizeof(OPENFILENAME);
-	ofn.hwndOwner		= owner ? owner->GetHandle() : 0;
-	ofn.lpstrFile		= szFile;
-	ofn.nMaxFile		= sizeof(szFile);
-	ofn.lpstrFilter     = fileFilter.c_str();
-	ofn.nFilterIndex	= filterIndex;
-	ofn.lpstrFileTitle	= NULL;
-	ofn.nMaxFileTitle	= 0;
-	ofn.lpstrInitialDir = initialDir.length() ? initialDir.c_str() : 0;
+	ofn.lStructSize     = sizeof(OPENFILENAME);
+	ofn.hwndOwner       = owner ? owner->GetHandle() : 0;
+	ofn.lpstrFile       = szFile;
+	ofn.nMaxFile        = sizeof(szFile);
+	ofn.lpstrFilter     = fileFilterBuf;
+	ofn.nFilterIndex    = filterIndex;
+	ofn.lpstrFileTitle  = NULL;
+	ofn.nMaxFileTitle   = 0;
+	ofn.lpstrInitialDir = initialDir.length() ? initialDirBuf : 0;
 	ofn.Flags = OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT | OFN_NONETWORKBUTTON | OFN_HIDEREADONLY;
 	// TODO: ofn.FlagsEx = OFN_EX_NOPLACESBAR;
 
@@ -121,7 +137,7 @@ int CFileDialog::GetSelectedFilter()
 
 void CFileDialog::SetFileName(const char *name)
 {
-	strncpy_s(szFile, 260, name, 260);
+	ConvertUtf8ToTChar(name, szFile, 260);
 }
 
 void CFileDialog::SetInitialDir(const char *dir)

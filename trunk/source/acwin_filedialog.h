@@ -1,6 +1,6 @@
 /*
    AngelCode Tool Box Library
-   Copyright (c) 2004-2012 Andreas Jonsson
+   Copyright (c) 2004-2014 Andreas Jonsson
   
    This software is provided 'as-is', without any express or implied 
    warranty. In no event will the authors be held liable for any 
@@ -25,7 +25,8 @@
    andreas@angelcode.com
 */
 
-// 2012-08-12 Added SetInitialDir
+// 2014-06-16  Prepared the code to work for both unicode and multibyte applications
+// 2012-08-12  Added SetInitialDir
 
 #ifndef ACWIN_FILEDIALOG_H
 #define ACWIN_FILEDIALOG_H
@@ -52,7 +53,7 @@ public:
 	void        SetInitialDir(const char *dir);
 
 protected:
-	char        szFile[260];
+	TCHAR       szFile[260];
 	std::string fileFilter;
 	int         filterIndex;
 	int         numFilters;

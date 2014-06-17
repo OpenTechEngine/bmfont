@@ -25,6 +25,9 @@
    andreas@angelcode.com
 */
 
+#include <Windows.h>
+#include <Strsafe.h>
+
 #include "choosefont.h"
 #include "resource.h"
 #include "commctrl.h"
@@ -38,10 +41,10 @@ extern GetGlyphIndices_t fGetGlyphIndicesA;
 extern GetGlyphIndices_t fGetGlyphIndicesW;
 
 int CALLBACK ChooseFontCallback(
-  ENUMLOGFONTEX *lpelfe,    // logical-font data
-  NEWTEXTMETRICEX *lpntme,  // physical-font data
-  DWORD FontType,           // type of font
-  LPARAM lParam             // application-defined data
+  ENUMLOGFONTEX *lpelfe,     // logical-font data
+  NEWTEXTMETRICEX *lpntme,   // physical-font data
+  DWORD FontType,            // type of font
+  LPARAM lParam              // application-defined data
 );
 
 int CALLBACK ChooseFontCallback2(
@@ -58,7 +61,7 @@ CChooseFont::CChooseFont() : CDialog()
 
 int CChooseFont::DoModal(CWindow *parent)
 {
-	return CDialog::DoModal(MAKEINTRESOURCE(IDD_CHOOSEFONT), parent);
+	return CDialog::DoModal(IDD_CHOOSEFONT, parent);
 }
 
 LRESULT CChooseFont::MsgProc(UINT msg, WPARAM wParam, LPARAM lParam)
@@ -126,10 +129,14 @@ void CChooseFont::EnableWidgets()
 
 void CChooseFont::OnFontChange()
 {
-	char buf[256];
+	TCHAR buf[256];
 	GetDlgItemText(hWnd, IDC_CHARSET, buf, 256);
-	if( strcmp(buf, "") != 0 )
-		charSet = GetCharSet(buf);
+
+	string charsetName;
+	ConvertTCharToUtf8(buf, charsetName);
+
+	if( charsetName != "" )
+		charSet = GetCharSet(charsetName.c_str());
 
 	SendDlgItemMessage(hWnd, IDC_CHARSET, CB_RESETCONTENT, 0, 0);
 
@@ -141,10 +148,9 @@ void CChooseFont::OnFontChange()
 		lf.lfCharSet = DEFAULT_CHARSET;
 		lf.lfPitchAndFamily = 0;
 
-		char buf[256];
+		TCHAR buf[256];
 		SendDlgItemMessage(hWnd, IDC_FONT, CB_GETLBTEXT, idx, (LPARAM)buf);
-
-		strncpy_s(lf.lfFaceName, LF_FACESIZE, buf, LF_FACESIZE-1);
+		StringCchCopy(lf.lfFaceName, LF_FACESIZE, buf);
 		lf.lfFaceName[LF_FACESIZE-1] = 0;
 
 		HDC dc = GetDC(0);
@@ -153,7 +159,8 @@ void CChooseFont::OnFontChange()
 	}
 
 	string str = GetCharSetName(charSet);
-	int r = SendDlgItemMessage(hWnd, IDC_CHARSET, CB_SELECTSTRING, -1, (LPARAM)str.c_str());
+	ConvertUtf8ToTChar(str, buf, 256);
+	int r = SendDlgItemMessage(hWnd, IDC_CHARSET, CB_SELECTSTRING, -1, (LPARAM)buf);
 	if( r == CB_ERR )
 		SendDlgItemMessage(hWnd, IDC_CHARSET, CB_SETCURSEL, 0, 0);
 }
@@ -164,7 +171,10 @@ void CChooseFont::OnBrowseFont()
 	dlg.AddFilter("Windows font files", "*.fon;*.fnt;*.ttf;*.ttc;*.fot;*.otf;", true);
 	if( dlg.AskForOpenFileName(this) )
 	{
-		SetDlgItemText(hWnd, IDC_FONTFILE, dlg.GetFileName().c_str());
+		TCHAR buf[1024];
+		ConvertUtf8ToTChar(dlg.GetFileName(), buf, 1024);
+
+		SetDlgItemText(hWnd, IDC_FONTFILE, buf);
 
 		EnumFonts();
 	}
@@ -173,21 +183,26 @@ void CChooseFont::OnBrowseFont()
 void CChooseFont::EnumFonts()
 {
 	// Store the currently selected font
-	char origFont[256];
+	TCHAR origFont[256];
 	GetDlgItemText(hWnd, IDC_FONT, origFont, 256);
 
 	// Clear the content
 	SendDlgItemMessage(hWnd, IDC_FONT, CB_RESETCONTENT, 0, 0);
 
 	// Add the font file before enumerating
-	char fontFile[256];
+	TCHAR fontFile[256];
 	GetDlgItemText(hWnd, IDC_FONTFILE, fontFile, 256);
-	if( strlen(fontFile) > 0 && AddFontResourceEx(fontFile, FR_PRIVATE, 0) == 0 )
+	if( fontFile[0] != 0 && AddFontResourceEx(fontFile, FR_PRIVATE, 0) == 0 )
 	{
+		string tmp;
+		ConvertTCharToUtf8(fontFile, tmp);
 		string msg = "Failed to add font file: \n\n\"";
-		msg += fontFile;
+		msg += tmp;
 		msg += "\"\n\nThe file is probably not a Windows font. Try another file.";
-		MessageBox(hWnd, msg.c_str(), "Invalid font file", MB_OK);
+
+		TCHAR message[1024];
+		ConvertUtf8ToTChar(msg, message, 1024);
+		MessageBox(hWnd, message, __TEXT("Invalid font file"), MB_OK);
 	}
 
 	// Enumerate all fonts and types
@@ -196,10 +211,10 @@ void CChooseFont::EnumFonts()
 
 	LOGFONT lf;
 	lf.lfCharSet = DEFAULT_CHARSET; 
-	lf.lfFaceName[0] = '\0';
+	lf.lfFaceName[0] = __TEXT('\0');
 	lf.lfPitchAndFamily = 0;
 
-	EnumFontFamiliesEx(dc, &lf, (FONTENUMPROC)ChooseFontCallback, (LPARAM)this, 0);
+	EnumFontFamiliesEx(dc, &lf, (FONTENUMPROCW)ChooseFontCallback, (LPARAM)this, 0);
 	ReleaseDC(0, dc);
 
 	// Remove the font file again
@@ -213,16 +228,21 @@ void CChooseFont::OnInit()
 {
 	string str;
 
-	SetDlgItemText(hWnd, IDC_FONTFILE, fontFile.c_str());
+	TCHAR buf[1024];
+	ConvertUtf8ToTChar(fontFile, buf, 1024);
+
+	SetDlgItemText(hWnd, IDC_FONTFILE, buf);
 
 	EnumFonts();
 
-	SendDlgItemMessage(hWnd, IDC_FONT, CB_SELECTSTRING, -1, (LPARAM)font.c_str());
+	ConvertUtf8ToTChar(font, buf, 1024);
+	SendDlgItemMessage(hWnd, IDC_FONT, CB_SELECTSTRING, -1, (LPARAM)buf);
 
 	OnFontChange();
 
 	str = GetCharSetName(charSet);
-	SendDlgItemMessage(hWnd, IDC_CHARSET, CB_SELECTSTRING, -1, (LPARAM)str.c_str());
+	ConvertUtf8ToTChar(str, buf, 1024);
+	SendDlgItemMessage(hWnd, IDC_CHARSET, CB_SELECTSTRING, -1, (LPARAM)buf);
 
 	if( fontSize < 0 )
 	{
@@ -269,22 +289,22 @@ void CChooseFont::OnInit()
 }
 
 int CALLBACK ChooseFontCallback(
-  ENUMLOGFONTEX *lpelfe,    // logical-font data
-  NEWTEXTMETRICEX *lpntme,  // physical-font data
-  DWORD FontType,           // type of font
-  LPARAM lParam             // application-defined data
+  ENUMLOGFONTEX *lpelfe,     // logical-font data
+  NEWTEXTMETRICEX *lpntme,   // physical-font data
+  DWORD FontType,            // type of font
+  LPARAM lParam              // application-defined data
 )
 {
 	CDialog *dlg = (CChooseFont *)lParam;
 
 	// Skip the rotated fonts, i.e. the ones prefixed with @
-	if( lpelfe->elfLogFont.lfFaceName[0] == '@' )
+	if( lpelfe->elfLogFont.lfFaceName[0] == __TEXT("@")[0] )
 		return 1;
 
 	// Add font name to combobox
-	int idx = SendDlgItemMessage(dlg->GetHandle(), IDC_FONT, CB_FINDSTRINGEXACT, 0, (LPARAM)(char*)lpelfe->elfLogFont.lfFaceName);
+	int idx = SendDlgItemMessage(dlg->GetHandle(), IDC_FONT, CB_FINDSTRINGEXACT, 0, (LPARAM)lpelfe->elfLogFont.lfFaceName);
 	if( idx == CB_ERR )
-		SendDlgItemMessage(dlg->GetHandle(), IDC_FONT, CB_ADDSTRING, 0, (LPARAM)(char*)lpelfe->elfLogFont.lfFaceName);
+		SendDlgItemMessage(dlg->GetHandle(), IDC_FONT, CB_ADDSTRING, 0, (LPARAM)lpelfe->elfLogFont.lfFaceName);
 
 	return 1;
 }
@@ -301,25 +321,29 @@ int CALLBACK ChooseFontCallback2(
 	string str = GetCharSetName(lpelfe->elfLogFont.lfCharSet);
 
 	// Add charset to combobox
-	int idx = SendDlgItemMessage(dlg->GetHandle(), IDC_CHARSET, CB_FINDSTRINGEXACT, 0, (LPARAM)str.c_str());
+	TCHAR buf[256];
+	ConvertUtf8ToTChar(str, buf, 256);
+	int idx = SendDlgItemMessage(dlg->GetHandle(), IDC_CHARSET, CB_FINDSTRINGEXACT, 0, (LPARAM)buf);
 	if( idx == CB_ERR )
-		SendDlgItemMessage(dlg->GetHandle(), IDC_CHARSET, CB_ADDSTRING, 0, (LPARAM)str.c_str());
+		SendDlgItemMessage(dlg->GetHandle(), IDC_CHARSET, CB_ADDSTRING, 0, (LPARAM)buf);
 
 	return 1;
 }
 
 void CChooseFont::GetOptions()
 {
-	char buf[256];
+	TCHAR buf[256];
 
 	GetDlgItemText(hWnd, IDC_FONT, buf, 256);
-	font = buf;
+	ConvertTCharToUtf8(buf, font);
 
 	GetDlgItemText(hWnd, IDC_FONTFILE, buf, 256);
-	fontFile = buf;
+	ConvertTCharToUtf8(buf, fontFile);
 
 	GetDlgItemText(hWnd, IDC_CHARSET, buf, 256);
-	charSet = GetCharSet(buf);
+	string charsetName;
+	ConvertTCharToUtf8(buf, charsetName);
+	charSet = GetCharSet(charsetName.c_str());
 
 	fontSize = GetDlgItemInt(hWnd, IDC_FONTSIZE, 0, FALSE);
 	if( IsDlgButtonChecked(hWnd, IDC_MATCHCHARHEIGHT) == BST_CHECKED )

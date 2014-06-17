@@ -1,6 +1,6 @@
 /*
    AngelCode Tool Box Library
-   Copyright (c) 2012-2013 Andreas Jonsson
+   Copyright (c) 2012-2014 Andreas Jonsson
   
    This software is provided 'as-is', without any express or implied 
    warranty. In no event will the authors be held liable for any 
@@ -25,11 +25,13 @@
    andreas@angelcode.com
 */
 
+// 2014-06-16  Updated to support build both for unicode and multibyte applications
 // 2013-06-15  Fixed GetFullPath() to handle relative base paths
 // 2013-06-15  Fixed crash in GetRelativePath() when both paths refer to same directory
 
 #include "acutil_path.h"
 #include <windows.h>
+#include "acwin_window.h"
 
 using namespace std;
 
@@ -51,9 +53,10 @@ string ReplacePathSlashes(const string &path)
 string GetApplicationPath()
 {
 	// Get the full path of the application
-	char buffer[300];
-	GetModuleFileName(0, buffer, 299);
-	string path = buffer;
+	TCHAR buffer[300];
+	GetModuleFileName(0, buffer, 300);
+	string path;
+	acWindow::ConvertTCharToUtf8(buffer, path);
 
 	// Replace all backslashes with forward slashes
 	path = ReplacePathSlashes(path);
@@ -88,16 +91,19 @@ string GetFullPath(const string &base, const string &relative)
 	else
 	{
 		// The base itself is a relative path so get the current working directory
-		char buf[MAX_PATH];
+		TCHAR buf[MAX_PATH];
 		GetCurrentDirectory(MAX_PATH, buf);
+		string cwd;
+		acWindow::ConvertTCharToUtf8(buf, cwd);
+
 		if( b.length() > 0 && b[0] == '/' )
 		{
 			// The base is an absolute path in current drive
-			path.assign(buf, 2);
+			path = cwd.substr(0, 2);
 			path += b;
 		}
 		else
-			path = ReplacePathSlashes(buf) + '/' + b;
+			path = ReplacePathSlashes(cwd) + '/' + b;
 
 		drive = path.substr(0, 1);
 		path = path.substr(2);
@@ -170,7 +176,7 @@ string GetRelativePath(const string &base, const string &relative)
 	else
 		path = b;
 
-	string driveRel,pathRel;
+	string driveRel, pathRel;
 	if( (pos = r.find(":")) != string::npos )
 	{
 		// The relative path is a full path
