@@ -232,7 +232,7 @@ int CCharWin::Create(int width, int height, const string &configFile)
 	HICON hIcon = (HICON)LoadImage(GetModuleHandle(0), MAKEINTRESOURCE(IDI_ICON1), IMAGE_ICON, LR_DEFAULTSIZE, LR_DEFAULTSIZE, LR_SHARED);
 	HICON hIconSmall = (HICON)LoadImage(GetModuleHandle(0), MAKEINTRESOURCE(IDI_ICON1), IMAGE_ICON, 16, 16, LR_SHARED);
 
-	int r = RegisterClass("CharWnd", 0, 0, hIcon, hIconSmall, AC_REGDEFCURSOR);
+	int r = RegisterMyClass("CharWnd", 0, 0, hIcon, hIconSmall, AC_REGDEFCURSOR);
 	if( r < 0 ) return r;
 
 	r = CWindow::Create("Bitmap font generator", width + LISTVIEW_WIDTH, height, WS_OVERLAPPEDWINDOW | WS_VISIBLE, 0, 0, "CharWnd");

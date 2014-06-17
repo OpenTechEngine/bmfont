@@ -1,6 +1,6 @@
 /*
    AngelCode Tool Box Library
-   Copyright (c) 2008-2011 Andreas Jonsson
+   Copyright (c) 2008-2014 Andreas Jonsson
   
    This software is provided 'as-is', without any express or implied 
    warranty. In no event will the authors be held liable for any 
@@ -25,6 +25,7 @@
    andreas@angelcode.com
 */
 
+// 2014-06-14 Changed LoadConfigFile to take std::string instead of char*
 // 2011-08-11 Added GetNumberOfAttributes and GetNameOfAttribute
 // 2009-06-18 Added const correctness
 // 2009-03-11 Changed index to unsigned to avoid crash on negative values
@@ -47,7 +48,7 @@ public:
 	CConfig();
 	~CConfig();
 
-	int LoadConfigFile(const char *file);
+	int LoadConfigFile(const std::string &file);
 
 	// Returns the number of different attributes
 	int  GetNumberOfAttributes() const;
