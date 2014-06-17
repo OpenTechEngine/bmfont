@@ -69,7 +69,7 @@ int cImageWnd::Create(CWindow *parent, CFontGen *fontGen)
 	HICON hIcon = (HICON)LoadImage(GetModuleHandle(0), MAKEINTRESOURCE(IDI_ICON1), IMAGE_ICON, LR_DEFAULTSIZE, LR_DEFAULTSIZE, LR_SHARED);
 	HICON hIconSmall = (HICON)LoadImage(GetModuleHandle(0), MAKEINTRESOURCE(IDI_ICON1), IMAGE_ICON, 16, 16, LR_SHARED);
 
-	int r = RegisterClass("ImageWnd", 0, 0, hIcon, hIconSmall, AC_REGDEFCURSOR);
+	int r = RegisterMyClass("ImageWnd", 0, 0, hIcon, hIconSmall, AC_REGDEFCURSOR);
 	if( r < 0 ) return r;
 
 	RECT rc = {0, 0, originalImage.width, originalImage.height};

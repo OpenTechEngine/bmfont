@@ -26,6 +26,7 @@
 */
 
 
+// 2014-06-17  Removed dependency on Windows.h in header
 // 2014-06-16  SetMenu and SetAccelerator takes an integer representing the resource
 // 2014-06-16  Removed #include <windows.h> in this header to, instead it needs to be included where Windows API is used
 // 2014-06-16  Added ConvertTCharToUtf8 and ConvertUtf8ToTChar
@@ -39,11 +40,31 @@
 #ifndef ACWIN_WINDOW_H
 #define ACWIN_WINDOW_H
 
-#ifndef _INC_WINDOWS
-#error Must include <windows.h> in .cpp file before <acwin_windows.h>
-#endif
-
 #include <string>
+
+// Forward declare types to avoid need for Windows.h
+typedef struct HWND__ *HWND;
+typedef struct tagACCEL ACCEL;
+typedef struct HBRUSH__ *HBRUSH;
+typedef struct HICON__ *HICON;
+typedef HICON HCURSOR;
+typedef struct HACCEL__ *HACCEL;
+typedef struct HMENU__ *HMENU;
+typedef struct HHOOK__ *HHOOK;
+typedef struct tagDRAWITEMSTRUCT DRAWITEMSTRUCT;
+typedef struct tagMSG MSG;
+typedef long LONG_PTR;
+typedef LONG_PTR LRESULT, LPARAM;
+typedef unsigned int UINT_PTR;
+typedef UINT_PTR WPARAM;
+typedef LRESULT (__stdcall* WNDPROC)(HWND, unsigned int, WPARAM, LPARAM);
+#ifndef _TCHAR_DEFINED
+#ifdef _UNICODE
+typedef wchar_t TCHAR;
+#else
+typedef char TCHAR;
+#endif
+#endif
 
 namespace acWindow
 {
@@ -66,12 +87,12 @@ public:
 	CWindow();
 	virtual ~CWindow();
 
-	int  Create(const char *title, int width, int height, DWORD style, DWORD styleEx, CWindow *parent, const char *className); 
+	int  Create(const char *title, int width, int height, unsigned long style, unsigned long styleEx, CWindow *parent, const char *className); 
 	int  SetAccelerator(int acceleratorId);
 	int  SetAccelerator(ACCEL *accels, int numItems);
 	int  SetMenu(int menuresourceId);
 
-	void Invalidate(BOOL erase);
+	void Invalidate(bool erase);
 
 	HWND GetHandle();
 	
@@ -81,18 +102,18 @@ public:
 
 	static CWindow *FromHandle(HWND hWnd);
 	static bool CheckMessages(bool wait);
-	static int RegisterClass(const char *className, UINT style, HBRUSH bgBrush, HICON icon, HICON smallIcon, HCURSOR cursor);
+	static int RegisterMyClass(const char *className, unsigned int style, HBRUSH bgBrush, HICON icon, HICON smallIcon, HCURSOR cursor);
 	static int HookCreate(CWindow *wnd);
 
-	virtual BOOL DrawItem(DRAWITEMSTRUCT *di);
+	virtual bool DrawItem(DRAWITEMSTRUCT *di);
 
 	void UpdateWindowText(const char *text);
 
 	bool IsVisible();
 
 protected:
-	virtual LRESULT DefWndProc(UINT msg, WPARAM wParam, LPARAM lParam);
-    virtual LRESULT MsgProc(UINT msg, WPARAM wParam, LPARAM lParam);
+	virtual LRESULT DefWndProc(unsigned int msg, WPARAM wParam, LPARAM lParam);
+	virtual LRESULT MsgProc(unsigned int msg, WPARAM wParam, LPARAM lParam);
 	virtual int TranslateMessage(MSG *msg);
 
 	void HideSystemMenuButton();
@@ -106,8 +127,8 @@ protected:
 private:
 	static CWindow *wndCreator;
 	static HHOOK hCreateHook;
-	static LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
-	static LRESULT CALLBACK CreateProc(int, WPARAM, LPARAM);
+	static LRESULT __stdcall WndProc(HWND, unsigned int, WPARAM, LPARAM);
+	static LRESULT __stdcall CreateProc(int, WPARAM, LPARAM);
 };
 
 // Helpers for converting strings between UTF8 and Windows' TCHAR
@@ -118,3 +139,4 @@ void ConvertUtf8ToTChar(const std::string &utf8, TCHAR *buf, size_t bufSize);
 }
 
 #endif
+

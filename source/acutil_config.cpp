@@ -1,6 +1,6 @@
 /*
    AngelCode Tool Box Library
-   Copyright (c) 2008-2011 Andreas Jonsson
+   Copyright (c) 2008-2014 Andreas Jonsson
   
    This software is provided 'as-is', without any express or implied 
    warranty. In no event will the authors be held liable for any 
@@ -25,6 +25,7 @@
    andreas@angelcode.com
 */
 
+// 2014-06-14 Changed LoadConfigFile to take std::string instead of char*
 // 2011-08-11 Added GetNumberOfAttributes and GetNameOfAttribute
 // 2009-08-07 GetAttrAsInt now reads numbers prefixed by h as hexadecimal numbers
 // 2009-06-18 Added const correctness
@@ -48,13 +49,13 @@ CConfig::~CConfig()
 {
 }
 
-int CConfig::LoadConfigFile(const char *file)
+int CConfig::LoadConfigFile(const string &file)
 {
 #if defined(_MSC_VER) && _MSC_VER >= 1500
 	FILE *f;
-	fopen_s(&f, file, "rb"); 
+	fopen_s(&f, file.c_str(), "rb"); 
 #else
-	FILE *f = fopen(file, "rb");
+	FILE *f = fopen(file.c_str(), "rb");
 #endif
 	if( f )
 	{
@@ -91,7 +92,7 @@ int CConfig::LoadConfigFile(const char *file)
 	}
 	else
 	{
-		LOG(("Failed to load file '%s' (%d)", file, errno));
+		LOG(("Failed to load file '%s' (%d)", file.c_str(), errno));
 		return -1;
 	}
 

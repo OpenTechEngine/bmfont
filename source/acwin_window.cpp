@@ -25,7 +25,7 @@
    andreas@angelcode.com
 */
 
-
+// 2014-06-17  Removed dependency on Windows.h in header
 // 2014-06-16  Prepared the code to work for both unicode and multibyte applications
 // 2014-06-16  Added ConvertTCharToUtf8 and ConvertUtf8ToTChar
 
@@ -101,7 +101,7 @@ int CWindow::Create(const char *title, int width, int height, DWORD style, DWORD
 	if( className == 0 )
 	{
 		// Register a default window class
-		int r = RegisterClass("Basic Window", 0, AC_REGDEFBRUSH, AC_REGDEFICON, AC_REGDEFICON, AC_REGDEFCURSOR);
+		int r = RegisterMyClass("Basic Window", 0, AC_REGDEFBRUSH, AC_REGDEFICON, AC_REGDEFICON, AC_REGDEFCURSOR);
 		if( FAILED(r) )
 			return r;
 
@@ -203,8 +203,8 @@ int CWindow::SetMenu(int menu)
 //=============================================================================
 
 // static
-int CWindow::RegisterClass(const char *className, UINT style, HBRUSH newBgBrush, HICON newIcon, HICON newSmallIcon,
-						   HCURSOR newCursor)
+int CWindow::RegisterMyClass(const char *className, unsigned int style, HBRUSH newBgBrush, 
+							 HICON newIcon, HICON newSmallIcon, HCURSOR newCursor)
 {
 	// Get the module handle
 	HINSTANCE hInst = GetModuleHandle(0);
@@ -352,9 +352,9 @@ HWND CWindow::GetHandle()
 	return hWnd;
 }
 
-void CWindow::Invalidate(BOOL erase)
+void CWindow::Invalidate(bool erase)
 {
-	InvalidateRect(hWnd, 0, erase);
+	InvalidateRect(hWnd, 0, erase ? TRUE : FALSE);
 }
 
 //=============================================================================
@@ -453,9 +453,9 @@ LRESULT CALLBACK CWindow::CreateProc(int nCode, WPARAM wParam, LPARAM lParam)
 // WM_DRAWITEM is sent to the parent for owner drawn 
 // controls and the parent calls this method on the child.
 // Return true, if the message is handled
-BOOL CWindow::DrawItem(DRAWITEMSTRUCT *di)
+bool CWindow::DrawItem(DRAWITEMSTRUCT *di)
 {
-	return FALSE;
+	return false;
 }
 
 //=============================================================================
