@@ -158,7 +158,7 @@ void CCharWin::OnTimer()
 
 			if( fontGen->GetError() )
 			{
-				MessageBox(hWnd, "Failed to generate the font due to out of memory. Try with a smaller font.", "Error", MB_ICONERROR|MB_OK);
+				MessageBox(hWnd, __TEXT("Failed to generate the font due to out of memory. Try with a smaller font."), __TEXT("Error"), MB_ICONERROR|MB_OK);
 				fontGen->ClearError();
 			}
 			else
@@ -229,8 +229,8 @@ int CCharWin::Create(int width, int height, const string &configFile)
 {
 	fontGen = new CFontGen();
 
-	HICON hIcon = (HICON)LoadImageA(GetModuleHandle(0), MAKEINTRESOURCE(IDI_ICON1), IMAGE_ICON, LR_DEFAULTSIZE, LR_DEFAULTSIZE, LR_SHARED);
-	HICON hIconSmall = (HICON)LoadImageA(GetModuleHandle(0), MAKEINTRESOURCE(IDI_ICON1), IMAGE_ICON, 16, 16, LR_SHARED);
+	HICON hIcon = (HICON)LoadImage(GetModuleHandle(0), MAKEINTRESOURCE(IDI_ICON1), IMAGE_ICON, LR_DEFAULTSIZE, LR_DEFAULTSIZE, LR_SHARED);
+	HICON hIconSmall = (HICON)LoadImage(GetModuleHandle(0), MAKEINTRESOURCE(IDI_ICON1), IMAGE_ICON, 16, 16, LR_SHARED);
 
 	int r = RegisterClass("CharWnd", 0, 0, hIcon, hIconSmall, AC_REGDEFCURSOR);
 	if( r < 0 ) return r;
@@ -238,9 +238,9 @@ int CCharWin::Create(int width, int height, const string &configFile)
 	r = CWindow::Create("Bitmap font generator", width + LISTVIEW_WIDTH, height, WS_OVERLAPPEDWINDOW | WS_VISIBLE, 0, 0, "CharWnd");
 	if( r < 0 ) return r;
 
-	SetMenu(MAKEINTRESOURCE(IDR_MENU));
+	SetMenu(IDR_MENU);
 
-	SetAccelerator(MAKEINTRESOURCE(IDR_ACCELERATOR));
+	SetAccelerator(IDR_ACCELERATOR);
 
 	statusBar = new CStatusBar();
 	statusBar->Create(this);
@@ -549,7 +549,7 @@ void CCharWin::DrawAnsi(HDC dc, RECT &rc, TEXTMETRIC &tm)
 			}
 
 			if( !fontGen->IsDisabled(y*16+x) )
-				TextOut(dc, x*rc.right/16 + cx, y*rc.bottom/16+cy, ch, 1);
+				TextOutA(dc, x*rc.right/16 + cx, y*rc.bottom/16+cy, ch, 1);
 
 			if( fontGen->IsImage(idx) )
 			{
@@ -1089,11 +1089,15 @@ void CCharWin::VisualizeAfterFinishedGenerating()
 		{
 			stringstream s;
 			s << countFailed << " characters did not fit the textures.";
-			MessageBox(hWnd, s.str().c_str(), "Warning", MB_OK);
+
+			TCHAR buf[1024];
+			ConvertUtf8ToTChar(s.str(), buf, 1024);
+
+			MessageBox(hWnd, buf, __TEXT("Warning"), MB_OK);
 		}
 	}
 	else
-		MessageBox(hWnd, "No output!", "Notification", MB_OK|MB_ICONEXCLAMATION);
+		MessageBox(hWnd, __TEXT("No output!"), __TEXT("Notification"), MB_OK|MB_ICONEXCLAMATION);
 }
 
 
@@ -1122,7 +1126,11 @@ void CCharWin::SaveFontAfterFinishedGenerating()
 	{
 		stringstream s;
 		s << countFailed << " characters did not fit the textures.";
-		MessageBox(hWnd, s.str().c_str(), "Warning", MB_OK);
+
+		TCHAR buf[1024];
+		ConvertUtf8ToTChar(s.str(), buf, 1024);
+
+		MessageBox(hWnd, buf, __TEXT("Warning"), MB_OK);
 	}
 }
 
@@ -1192,7 +1200,11 @@ void CCharWin::OnSelectCharsFromFile()
 		{
 			stringstream s;
 			s << countMissing << " characters from the file are not available in the font";
-			MessageBox(hWnd, s.str().c_str(), "Warning", MB_OK);
+
+			TCHAR buf[1024];
+			ConvertUtf8ToTChar(s.str(), buf, 1024);
+
+			MessageBox(hWnd, buf, __TEXT("Warning"), MB_OK);
 		}
 
 		UpdateSubsetsSelection();

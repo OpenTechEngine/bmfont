@@ -25,7 +25,7 @@
    andreas@angelcode.com
 */
 
-#include <stdarg.h>		// va_list, va_start(), etc
+#include <stdarg.h>     // va_list, va_start(), etc
 #include <stdlib.h>     // strtod(), strtol()
 #include <assert.h>     // assert()
 #include <stdio.h>      // _vsnprintf()

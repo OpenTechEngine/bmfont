@@ -25,6 +25,7 @@
    andreas@angelcode.com
 */
 
+#include <Windows.h>
 #include "exportdlg.h"
 #include "resource.h"
 #include "commctrl.h"
@@ -72,7 +73,7 @@ CExportDlg::CExportDlg() : CDialog()
 
 int CExportDlg::DoModal(CWindow *parent)
 {
-	return CDialog::DoModal(MAKEINTRESOURCE(IDD_EXPORT), parent);
+	return CDialog::DoModal(IDD_EXPORT, parent);
 }
 
 LRESULT CExportDlg::MsgProc(UINT msg, WPARAM wParam, LPARAM lParam)
@@ -173,6 +174,8 @@ void CExportDlg::EnableWidgets()
 
 void CExportDlg::OnInit()
 {
+	TCHAR buf[256];
+
 	// Character layout
 	SetDlgItemInt(hWnd, IDC_SPACE_UP, paddingUp, FALSE);
 	SetDlgItemInt(hWnd, IDC_SPACE_DOWN, paddingDown, FALSE);
@@ -203,32 +206,32 @@ void CExportDlg::OnInit()
 	CheckDlgButton(hWnd, IDC_4CHNLPACK, fourChnlPacked ? BST_CHECKED : BST_UNCHECKED);
 
 	// Fill in the channel content combos
-	SendDlgItemMessage(hWnd, IDC_ALPHA, CB_ADDSTRING, 0, (LPARAM)"glyph");
-	SendDlgItemMessage(hWnd, IDC_ALPHA, CB_ADDSTRING, 0, (LPARAM)"outline");
-	SendDlgItemMessage(hWnd, IDC_ALPHA, CB_ADDSTRING, 0, (LPARAM)"encoded glyph & outline");
-	SendDlgItemMessage(hWnd, IDC_ALPHA, CB_ADDSTRING, 0, (LPARAM)"zero");
-	SendDlgItemMessage(hWnd, IDC_ALPHA, CB_ADDSTRING, 0, (LPARAM)"one");
+	SendDlgItemMessage(hWnd, IDC_ALPHA, CB_ADDSTRING, 0, (LPARAM)__TEXT("glyph"));
+	SendDlgItemMessage(hWnd, IDC_ALPHA, CB_ADDSTRING, 0, (LPARAM)__TEXT("outline"));
+	SendDlgItemMessage(hWnd, IDC_ALPHA, CB_ADDSTRING, 0, (LPARAM)__TEXT("encoded glyph & outline"));
+	SendDlgItemMessage(hWnd, IDC_ALPHA, CB_ADDSTRING, 0, (LPARAM)__TEXT("zero"));
+	SendDlgItemMessage(hWnd, IDC_ALPHA, CB_ADDSTRING, 0, (LPARAM)__TEXT("one"));
 	SendDlgItemMessage(hWnd, IDC_ALPHA, CB_SETCURSEL, alphaChnl, 0);
 
-	SendDlgItemMessage(hWnd, IDC_RED, CB_ADDSTRING, 0, (LPARAM)"glyph");
-	SendDlgItemMessage(hWnd, IDC_RED, CB_ADDSTRING, 0, (LPARAM)"outline");
-	SendDlgItemMessage(hWnd, IDC_RED, CB_ADDSTRING, 0, (LPARAM)"encoded glyph & outline");
-	SendDlgItemMessage(hWnd, IDC_RED, CB_ADDSTRING, 0, (LPARAM)"zero");
-	SendDlgItemMessage(hWnd, IDC_RED, CB_ADDSTRING, 0, (LPARAM)"one");
+	SendDlgItemMessage(hWnd, IDC_RED, CB_ADDSTRING, 0, (LPARAM)__TEXT("glyph"));
+	SendDlgItemMessage(hWnd, IDC_RED, CB_ADDSTRING, 0, (LPARAM)__TEXT("outline"));
+	SendDlgItemMessage(hWnd, IDC_RED, CB_ADDSTRING, 0, (LPARAM)__TEXT("encoded glyph & outline"));
+	SendDlgItemMessage(hWnd, IDC_RED, CB_ADDSTRING, 0, (LPARAM)__TEXT("zero"));
+	SendDlgItemMessage(hWnd, IDC_RED, CB_ADDSTRING, 0, (LPARAM)__TEXT("one"));
 	SendDlgItemMessage(hWnd, IDC_RED, CB_SETCURSEL, redChnl, 0);
 
-	SendDlgItemMessage(hWnd, IDC_GREEN, CB_ADDSTRING, 0, (LPARAM)"glyph");
-	SendDlgItemMessage(hWnd, IDC_GREEN, CB_ADDSTRING, 0, (LPARAM)"outline");
-	SendDlgItemMessage(hWnd, IDC_GREEN, CB_ADDSTRING, 0, (LPARAM)"encoded glyph & outline");
-	SendDlgItemMessage(hWnd, IDC_GREEN, CB_ADDSTRING, 0, (LPARAM)"zero");
-	SendDlgItemMessage(hWnd, IDC_GREEN, CB_ADDSTRING, 0, (LPARAM)"one");
+	SendDlgItemMessage(hWnd, IDC_GREEN, CB_ADDSTRING, 0, (LPARAM)__TEXT("glyph"));
+	SendDlgItemMessage(hWnd, IDC_GREEN, CB_ADDSTRING, 0, (LPARAM)__TEXT("outline"));
+	SendDlgItemMessage(hWnd, IDC_GREEN, CB_ADDSTRING, 0, (LPARAM)__TEXT("encoded glyph & outline"));
+	SendDlgItemMessage(hWnd, IDC_GREEN, CB_ADDSTRING, 0, (LPARAM)__TEXT("zero"));
+	SendDlgItemMessage(hWnd, IDC_GREEN, CB_ADDSTRING, 0, (LPARAM)__TEXT("one"));
 	SendDlgItemMessage(hWnd, IDC_GREEN, CB_SETCURSEL, greenChnl, 0);
 
-	SendDlgItemMessage(hWnd, IDC_BLUE, CB_ADDSTRING, 0, (LPARAM)"glyph");
-	SendDlgItemMessage(hWnd, IDC_BLUE, CB_ADDSTRING, 0, (LPARAM)"outline");
-	SendDlgItemMessage(hWnd, IDC_BLUE, CB_ADDSTRING, 0, (LPARAM)"encoded glyph & outline");
-	SendDlgItemMessage(hWnd, IDC_BLUE, CB_ADDSTRING, 0, (LPARAM)"zero");
-	SendDlgItemMessage(hWnd, IDC_BLUE, CB_ADDSTRING, 0, (LPARAM)"one");
+	SendDlgItemMessage(hWnd, IDC_BLUE, CB_ADDSTRING, 0, (LPARAM)__TEXT("glyph"));
+	SendDlgItemMessage(hWnd, IDC_BLUE, CB_ADDSTRING, 0, (LPARAM)__TEXT("outline"));
+	SendDlgItemMessage(hWnd, IDC_BLUE, CB_ADDSTRING, 0, (LPARAM)__TEXT("encoded glyph & outline"));
+	SendDlgItemMessage(hWnd, IDC_BLUE, CB_ADDSTRING, 0, (LPARAM)__TEXT("zero"));
+	SendDlgItemMessage(hWnd, IDC_BLUE, CB_ADDSTRING, 0, (LPARAM)__TEXT("one"));
 	SendDlgItemMessage(hWnd, IDC_BLUE, CB_SETCURSEL, blueChnl, 0);
 
 	CheckDlgButton(hWnd, IDC_INV_A, invA ? BST_CHECKED : BST_UNCHECKED);
@@ -242,10 +245,11 @@ void CExportDlg::OnInit()
 	CheckDlgButton(hWnd, IDC_DESC_BIN,  fontDescFormat == 2 ? BST_CHECKED : BST_UNCHECKED);
 
 	// Fill in the texture file format combo
-	SendDlgItemMessage(hWnd, IDC_TEXTURE_FMT, CB_ADDSTRING, 0, (LPARAM)"dds - DirectDraw Surface");
-	SendDlgItemMessage(hWnd, IDC_TEXTURE_FMT, CB_ADDSTRING, 0, (LPARAM)"png - Portable Network Graphics");
-	SendDlgItemMessage(hWnd, IDC_TEXTURE_FMT, CB_ADDSTRING, 0, (LPARAM)"tga - Targa");
-	SendDlgItemMessage(hWnd, IDC_TEXTURE_FMT, CB_SELECTSTRING, -1, (LPARAM)textureFormat.c_str());
+	SendDlgItemMessage(hWnd, IDC_TEXTURE_FMT, CB_ADDSTRING, 0, (LPARAM)__TEXT("dds - DirectDraw Surface"));
+	SendDlgItemMessage(hWnd, IDC_TEXTURE_FMT, CB_ADDSTRING, 0, (LPARAM)__TEXT("png - Portable Network Graphics"));
+	SendDlgItemMessage(hWnd, IDC_TEXTURE_FMT, CB_ADDSTRING, 0, (LPARAM)__TEXT("tga - Targa"));
+	ConvertUtf8ToTChar(textureFormat, buf, 256);
+	SendDlgItemMessage(hWnd, IDC_TEXTURE_FMT, CB_SELECTSTRING, -1, (LPARAM)buf);
 	OnTextureChange();
 	SendDlgItemMessage(hWnd, IDC_TEXTURE_COMPRESSION, CB_SETCURSEL, textureCompression, 0);
 
@@ -253,7 +257,8 @@ void CExportDlg::OnInit()
 	int numPresets = sizeof(presets)/sizeof(SPresets);
 	for( int n = 0; n < numPresets; n++ )
 	{
-		SendDlgItemMessage(hWnd, IDC_PRESETS, CB_ADDSTRING, 0, (LPARAM)presets[n].name);
+		ConvertUtf8ToTChar(presets[n].name, buf, 256);
+		SendDlgItemMessage(hWnd, IDC_PRESETS, CB_ADDSTRING, 0, (LPARAM)buf);
 	}
 
 	// TODO: Set the preset that matches the choices
@@ -288,28 +293,28 @@ void CExportDlg::OnTextureChange()
 	int idx = SendDlgItemMessage(hWnd, IDC_TEXTURE_FMT, CB_GETCURSEL, 0, 0);
 	if( idx != CB_ERR )
 	{
-		char buf[256];
+		TCHAR buf[256];
 		SendDlgItemMessage(hWnd, IDC_TEXTURE_FMT, CB_GETLBTEXT, idx, (LPARAM)buf);
-
-		textureFormat.assign(buf, 3);
+		ConvertTCharToUtf8(buf, textureFormat);
+		textureFormat.resize(3);
 	}
 
 	// Add the compression options
 	if( textureFormat == "tga" )
 	{
-		SendDlgItemMessage(hWnd, IDC_TEXTURE_COMPRESSION, CB_ADDSTRING, 0, (LPARAM)"None");
-		SendDlgItemMessage(hWnd, IDC_TEXTURE_COMPRESSION, CB_ADDSTRING, 0, (LPARAM)"Run-length encoded");
+		SendDlgItemMessage(hWnd, IDC_TEXTURE_COMPRESSION, CB_ADDSTRING, 0, (LPARAM)__TEXT("None"));
+		SendDlgItemMessage(hWnd, IDC_TEXTURE_COMPRESSION, CB_ADDSTRING, 0, (LPARAM)__TEXT("Run-length encoded"));
 	}
 	else if( textureFormat == "png" )
 	{
-		SendDlgItemMessage(hWnd, IDC_TEXTURE_COMPRESSION, CB_ADDSTRING, 0, (LPARAM)"Deflate");
+		SendDlgItemMessage(hWnd, IDC_TEXTURE_COMPRESSION, CB_ADDSTRING, 0, (LPARAM)__TEXT("Deflate"));
 	}
 	else if( textureFormat == "dds" )
 	{
-		SendDlgItemMessage(hWnd, IDC_TEXTURE_COMPRESSION, CB_ADDSTRING, 0, (LPARAM)"None");
-		SendDlgItemMessage(hWnd, IDC_TEXTURE_COMPRESSION, CB_ADDSTRING, 0, (LPARAM)"DXT1");
-		SendDlgItemMessage(hWnd, IDC_TEXTURE_COMPRESSION, CB_ADDSTRING, 0, (LPARAM)"DXT3");
-		SendDlgItemMessage(hWnd, IDC_TEXTURE_COMPRESSION, CB_ADDSTRING, 0, (LPARAM)"DXT5");
+		SendDlgItemMessage(hWnd, IDC_TEXTURE_COMPRESSION, CB_ADDSTRING, 0, (LPARAM)__TEXT("None"));
+		SendDlgItemMessage(hWnd, IDC_TEXTURE_COMPRESSION, CB_ADDSTRING, 0, (LPARAM)__TEXT("DXT1"));
+		SendDlgItemMessage(hWnd, IDC_TEXTURE_COMPRESSION, CB_ADDSTRING, 0, (LPARAM)__TEXT("DXT3"));
+		SendDlgItemMessage(hWnd, IDC_TEXTURE_COMPRESSION, CB_ADDSTRING, 0, (LPARAM)__TEXT("DXT5"));
 	}
 
 	SendDlgItemMessage(hWnd, IDC_TEXTURE_COMPRESSION, CB_SETCURSEL, 0, 0);
@@ -317,8 +322,6 @@ void CExportDlg::OnTextureChange()
 
 void CExportDlg::GetOptions()
 {
-	char buf[256];
-
 	// Character layout
 	paddingUp = GetDlgItemInt(hWnd, IDC_SPACE_UP, 0, FALSE);
 	paddingDown = GetDlgItemInt(hWnd, IDC_SPACE_DOWN, 0, FALSE);
@@ -345,8 +348,11 @@ void CExportDlg::GetOptions()
 	if( IsDlgButtonChecked(hWnd, IDC_DESC_XML)  ) fontDescFormat = 1;
 	if( IsDlgButtonChecked(hWnd, IDC_DESC_BIN)  ) fontDescFormat = 2;
 
+	// Get the file extension from combo box
+	TCHAR buf[256];
 	GetDlgItemText(hWnd, IDC_TEXTURE_FMT, buf, 256);
-	textureFormat.assign(buf, 3);
+	ConvertTCharToUtf8(buf, textureFormat);
+	textureFormat.resize(3);
 
 	textureCompression = SendDlgItemMessage(hWnd, IDC_TEXTURE_COMPRESSION, CB_GETCURSEL, 0, 0);
 

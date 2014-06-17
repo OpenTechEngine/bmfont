@@ -66,8 +66,8 @@ int cImageWnd::Create(CWindow *parent, CFontGen *fontGen)
 	this->parent  = parent;
 	this->fontGen = fontGen;
 
-	HICON hIcon = (HICON)LoadImageA(GetModuleHandle(0), MAKEINTRESOURCE(IDI_ICON1), IMAGE_ICON, LR_DEFAULTSIZE, LR_DEFAULTSIZE, LR_SHARED);
-	HICON hIconSmall = (HICON)LoadImageA(GetModuleHandle(0), MAKEINTRESOURCE(IDI_ICON1), IMAGE_ICON, 16, 16, LR_SHARED);
+	HICON hIcon = (HICON)LoadImage(GetModuleHandle(0), MAKEINTRESOURCE(IDI_ICON1), IMAGE_ICON, LR_DEFAULTSIZE, LR_DEFAULTSIZE, LR_SHARED);
+	HICON hIconSmall = (HICON)LoadImage(GetModuleHandle(0), MAKEINTRESOURCE(IDI_ICON1), IMAGE_ICON, 16, 16, LR_SHARED);
 
 	int r = RegisterClass("ImageWnd", 0, 0, hIcon, hIconSmall, AC_REGDEFCURSOR);
 	if( r < 0 ) return r;
@@ -93,9 +93,9 @@ int cImageWnd::Create(CWindow *parent, CFontGen *fontGen)
 	r = CWindow::Create(title.str().c_str(), rc.right-rc.left, rc.bottom-rc.top, WS_OVERLAPPEDWINDOW, 0, parent, "ImageWnd");
 	if( r < 0 ) return r;
 
-	SetMenu(MAKEINTRESOURCE(IDR_IMG_MENU));
+	SetMenu(IDR_IMG_MENU);
 
-	SetAccelerator(MAKEINTRESOURCE(IDR_IMG_ACCEL));
+	SetAccelerator(IDR_IMG_ACCEL);
 
 	ShowWindow(hWnd, SW_SHOW);
 

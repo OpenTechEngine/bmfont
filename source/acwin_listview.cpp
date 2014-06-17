@@ -1,6 +1,6 @@
 /*
    AngelCode Tool Box Library
-   Copyright (c) 2004-2011 Andreas Jonsson
+   Copyright (c) 2004-2014 Andreas Jonsson
   
    This software is provided 'as-is', without any express or implied 
    warranty. In no event will the authors be held liable for any 
@@ -25,9 +25,11 @@
    andreas@angelcode.com
 */
 
+// 2014-06-15 Support compiling for both unicode and multibyte Windows
 // 2011-08-23 Added column parameter to Get/SetItemText
 // 2011-08-23 Added SetEditColumn
 
+#include <Windows.h>
 #include "acwin_listview.h"
 #include <assert.h>
 
@@ -54,7 +56,7 @@ int CListView::Create(DWORD style, DWORD exStyle, RECT *rc, CWindow *parent, UIN
 	//         LVS_SHOWSELALWAYS | WS_CLIPSIBLINGS | LVS_NOSORTHEADER;
 
 	HWND parentWnd = parent ? parent->GetHandle() : 0;
-	HWND listView = CreateWindow(WC_LISTVIEW, "", 
+	HWND listView = CreateWindow(WC_LISTVIEW, __TEXT(""), 
 		style, rc->left, rc->top, rc->right - rc->left, rc->bottom - rc->top, 
 		parentWnd, (HMENU)id, GetModuleHandle(0), 0); 
 	if( Subclass(listView) < 0 ) 
@@ -67,11 +69,16 @@ int CListView::Create(DWORD style, DWORD exStyle, RECT *rc, CWindow *parent, UIN
 	return 0;
 }
 
-int CListView::FindItem(int start, const char *text)
+int CListView::FindItem(int start, const string &text)
 {
+	assert( text.length() < 256 );
+
+	TCHAR buf[256];
+	ConvertUtf8ToTChar(text, buf, 256);
+
 	LVFINDINFO fi;
 	fi.flags = LVFI_STRING|LVFI_WRAP;
-	fi.psz = text;
+	fi.psz = buf;
 
 	return ListView_FindItem(hWnd, start, &fi);
 }
@@ -147,16 +154,21 @@ void CListView::PassRightButtonToParent(bool pass)
 	doPassRightButtonToParent = pass;
 }
 
-int CListView::InsertColumn(UINT col, const char *name, UINT width)
+int CListView::InsertColumn(UINT col, const string &name, UINT width)
 {
+	assert( width < 256 );
+
+	TCHAR buf[256];
+	ConvertUtf8ToTChar(name, buf, 256);
+
 	LVCOLUMN lvc; 
 	lvc.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM; 
-    lvc.iSubItem = col;
-    lvc.pszText = (char*)name;	
-    lvc.cx = width;         // width of column in pixels
-    lvc.fmt = LVCFMT_LEFT;  // left-aligned column
+	lvc.iSubItem = col;
+	lvc.pszText = buf;
+	lvc.cx = width;         // width of column in pixels
+	lvc.fmt = LVCFMT_LEFT;  // left-aligned column
 
-    if( ListView_InsertColumn(hWnd, col, &lvc) == -1 ) 
+	if( ListView_InsertColumn(hWnd, col, &lvc) == -1 ) 
 		return -1; 
 
 	return 0;
@@ -179,17 +191,21 @@ int CListView::InsertItem(UINT item)
 	return 0;
 }
 
-int CListView::InsertItem(UINT item, const char *text, long param)
+int CListView::InsertItem(UINT item, const string &text, long param)
 {
+	assert( text.length() < 256 );
+
+	TCHAR buf[256];
+	ConvertUtf8ToTChar(text, buf, 256);
+
 	LVITEM lvi;
 	lvi.mask = LVIF_TEXT | LVIF_PARAM | LVIF_STATE; 
 	lvi.stateMask = 0;
 	lvi.state = 0;
 	lvi.iSubItem = 0;
 	lvi.lParam = param; 
-	lvi.pszText = (char*)text;
+	lvi.pszText = buf;
 	lvi.iItem = item;
-
 
 	if( ListView_InsertItem(hWnd, &lvi) == -1 )
 		return -1;
@@ -270,21 +286,28 @@ int CListView::GetItemImage(UINT item)
 
 int CListView::GetItemText(UINT item, UINT column, string *text)
 {
-	char buffer[256] = {0};
+	TCHAR buffer[256] = {0};
 	LVITEM lvi;
 	lvi.iSubItem = column;
 	lvi.pszText = buffer;
 	lvi.cchTextMax = 256;
 	int r = SendMessage(hWnd, LVM_GETITEMTEXT, item, (LPARAM)&lvi);
-	*text = buffer;
+
+	ConvertTCharToUtf8(buffer, *text);
+
 	return r > 0 ? 0 : -1;
 }
 
-void CListView::SetItemText(UINT item, UINT column, const char *text)
+void CListView::SetItemText(UINT item, UINT column, const string &text)
 {
+	assert( text.length() < 256 );
+
+	TCHAR buf[256];
+	ConvertUtf8ToTChar(text, buf, 256);
+
 	LVITEM lvi;
 	lvi.iSubItem = column;
-	lvi.pszText = (char*)text;
+	lvi.pszText = buf;
 	SendMessage(hWnd, LVM_SETITEMTEXT, item, (LPARAM)&lvi);
 }
 
@@ -313,7 +336,13 @@ void CListView::BeginLabelEdit(NMLVDISPINFO *info, UINT column)
 	// Set the text from the column
 	string text;
 	GetItemText(info->item.iItem, column, &text);
-	SetWindowText(edit, text.c_str());
+
+	assert( text.length() < 256 );
+
+	TCHAR buf[256];
+	ConvertUtf8ToTChar(text, buf, 256);
+
+	SetWindowText(edit, buf);
 }
 
 UINT CListView::GetEditColumn()
@@ -326,7 +355,10 @@ void CListView::EndLabelEdit(NMLVDISPINFO *info)
 	if( info->item.pszText )
 	{
 		// Manually update the subitem text
-		SetItemText(info->item.iItem, editColumn, info->item.pszText);
+		string text;
+		ConvertTCharToUtf8(info->item.pszText, text);
+
+		SetItemText(info->item.iItem, editColumn, text);
 	}
 
 	// Reset the edit column

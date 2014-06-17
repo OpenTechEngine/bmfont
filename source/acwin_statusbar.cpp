@@ -1,6 +1,6 @@
 /*
    AngelCode Tool Box Library
-   Copyright (c) 2004-2008 Andreas Jönsson
+   Copyright (c) 2004-2014 Andreas Jonsson
   
    This software is provided 'as-is', without any express or implied 
    warranty. In no event will the authors be held liable for any 
@@ -21,10 +21,14 @@
    3. This notice may not be removed or altered from any source 
       distribution.
   
-   Andreas Jönsson
+   Andreas Jonsson
    andreas@angelcode.com
 */
 
+
+// 2014-06-16  Prepared the code to work for both unicode and multibyte applications
+
+#include <Windows.h>
 #include "acwin_statusbar.h"
 #include <assert.h>
 
@@ -52,7 +56,7 @@ int CStatusBar::Create(CWindow *parent)
 	InitCommonControlsEx(&icc);
 
 	HWND parentWnd = parent ? parent->GetHandle() : 0;
-	HWND statusBar = CreateStatusWindow(WS_CHILD|WS_VISIBLE|WS_CLIPSIBLINGS|WS_CLIPCHILDREN, "", parentWnd, 0);
+	HWND statusBar = CreateStatusWindow(WS_CHILD|WS_VISIBLE|WS_CLIPSIBLINGS|WS_CLIPCHILDREN, __TEXT(""), parentWnd, 0);
 	if( Subclass(statusBar) < 0 )
 		return -1;
 
@@ -88,7 +92,11 @@ LRESULT CStatusBar::MsgProc(UINT msg, WPARAM wParam, LPARAM lParam)
 void CStatusBar::SetStatusText(const char *text, UINT index, DWORD flags)
 {
 	if( index > 255 ) index = 255;
-	SendMessage(hWnd, SB_SETTEXT, index | flags, (LPARAM)text);
+
+	TCHAR buf[1024];
+	ConvertUtf8ToTChar(text, buf, 1024);
+
+	SendMessage(hWnd, SB_SETTEXT, index | flags, (LPARAM)buf);
 }
 
 void CStatusBar::SetParts(UINT inNumParts, int *inWidths)

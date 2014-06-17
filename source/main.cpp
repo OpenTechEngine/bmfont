@@ -29,10 +29,11 @@
 #include <crtdbg.h>
 #include <string>
 #include <iostream>
-using namespace std;
 
 #include "dynamic_funcs.h"
 #include "charwin.h"
+
+using namespace std;
 
 const char *getArgValue(const char *cmdLine, string &value)
 {
